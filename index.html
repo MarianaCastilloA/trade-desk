@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Trade Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F3EC; --surface: #FFFFFF; --surface-2: #ECE6D9; --border: #DDD5C3;
+    --text: #211E19; --text-muted: #746C5C; --accent: #8A2432; --accent-soft: #F1DCDF;
+    --gold: #93711F; --gold-soft: #EFE3C4; --good: #3E6B4C; --good-soft: #DCEADF;
+    --warn: #93641B; --warn-soft: #F2E2C4; --crit: #A03349; --crit-soft: #F5DCE1;
+    --shadow: 0 1px 2px rgba(30,20,10,0.06), 0 6px 20px rgba(30,20,10,0.05);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17140F; --surface: #211C16; --surface-2: #2A2419; --border: #3A3225;
+      --text: #EDE7DA; --text-muted: #A79C87; --accent: #D9727F; --accent-soft: #3A2229;
+      --gold: #D4B15A; --gold-soft: #362D18; --good: #7FB894; --good-soft: #203025;
+      --warn: #D4A85A; --warn-soft: #362D18; --crit: #E68A99; --crit-soft: #3A2229;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 14px;
+    padding-inline: 16px; padding-block: calc(12px + env(safe-area-inset-top, 0px)) calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  h1, h2 { font-family: "Fraunces", Georgia, serif; text-wrap: balance; }
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+  header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 8px 12px; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 24px; font-weight: 600; margin: 0; }
+  h2 { font-size: 17px; font-weight: 600; margin: 0; }
+  .top-actions { display: flex; gap: 14px; align-items: baseline; }
+  .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500; }
+  .muted { color: var(--text-muted); }
+  .small { font-size: 12.5px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+
+  .acct { display: flex; gap: 12px; align-items: center; }
+  .acct img { width: 64px; height: 64px; border-radius: 9px; object-fit: cover; border: 1px solid var(--border); background: var(--surface-2); cursor: zoom-in; flex: 0 0 auto; }
+  .acct .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .acct .value { font-size: 20px; font-weight: 600; }
+  .acct .summary { font-size: 12.5px; color: var(--text-muted); line-height: 1.4; }
+
+  .seg { display: flex; gap: 4px; background: var(--surface-2); border-radius: 10px; padding: 3px; }
+  .seg button { flex: 1; font: inherit; font-size: 13.5px; font-weight: 500; border: 0; border-radius: 8px; padding: 8px 6px; background: transparent; color: var(--text-muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .btn { font: inherit; font-size: 14px; font-weight: 600; border-radius: 9px; padding: 10px 16px; border: 1px solid var(--text); background: var(--text); color: var(--bg); cursor: pointer; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); font-weight: 500; }
+  .btn.small { font-size: 12.5px; padding: 6px 10px; }
+  .link-btn { font: inherit; font-size: 12.5px; background: none; border: 0; color: var(--gold); cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field input, .field textarea, .inline input {
+    font: inherit; font-size: 16px; color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; width: 100%;
+  }
+  .field textarea { resize: vertical; min-height: 64px; line-height: 1.45; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .row > .field { flex: 1 1 160px; }
+  .hint { font-size: 12.5px; color: var(--text-muted); line-height: 1.45; margin: 0; }
+  .hint a { color: var(--gold); }
+
+  .drop { border: 1.5px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; background: var(--bg); display: block; }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop strong { font-size: 14px; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+  .thumb { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); aspect-ratio: 1; max-width: 100%; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+  .thumb .tag-t { position: absolute; left: 4px; bottom: 4px; font-size: 10.5px; background: rgba(0,0,0,0.65); color: #fff; padding: 1px 5px; border-radius: 4px; }
+  .thumb .x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0,0,0,0.65); color: #fff; font-size: 15px; line-height: 26px; cursor: pointer; padding: 0; }
+  .status { font-size: 13px; color: var(--text-muted); min-height: 18px; line-height: 1.4; }
+  .status.err { color: var(--crit); }
+  .status.ok { color: var(--good); }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { font: inherit; font-size: 12.5px; font-weight: 500; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
+  .pill[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .list { display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .card.done { opacity: 0.62; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; padding: 3px 8px; border-radius: 6px; }
+  .badge.trade { background: var(--gold-soft); color: var(--gold); }
+  .badge.sell { background: var(--accent-soft); color: var(--accent); }
+  .badge.buy { background: var(--good-soft); color: var(--good); }
+  .age { font-size: 11.5px; color: var(--text-muted); }
+  select.status-select { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+  .shots { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+  .shots img { height: 120px; width: auto; flex: 0 0 auto; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); cursor: zoom-in; }
+  .given { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+  .given .num { font-weight: 600; }
+
+  .verdict { border: 1px solid var(--border); background: var(--surface-2); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .v-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .v-action { font-size: 15px; font-weight: 600; text-transform: capitalize; }
+  .v-action.good { color: var(--good); } .v-action.crit { color: var(--crit); } .v-action.warn { color: var(--warn); }
+  .v-range { font-size: 16px; font-weight: 600; }
+  .v-conf { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .v-head { font-size: 14px; line-height: 1.45; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); line-height: 1.35; }
+  .tag.skin { color: var(--text); }
+  .tag.skin .num { color: var(--gold); margin-left: 4px; }
+  .tag.risk { color: var(--crit); border-color: var(--crit-soft); }
+  .cmp { font-size: 13px; padding: 7px 9px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); line-height: 1.4; }
+  .cmp.upgrade { color: var(--good); border-color: var(--good-soft); }
+  .cmp.downgrade { color: var(--crit); border-color: var(--crit-soft); }
+  .wcm { font-size: 12.5px; color: var(--text-muted); font-style: italic; }
+  .inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .inline input { width: auto; flex: 1 1 110px; padding: 7px 9px; }
+  .note-field { font: inherit; font-size: 16px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; min-height: 40px; width: 100%; }
+  .save-hint { font-size: 10.5px; color: var(--text-muted); min-height: 12px; }
+  .foot { display: flex; justify-content: flex-end; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .empty { border: 1px dashed var(--border); border-radius: 12px; padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 13.5px; line-height: 1.5; }
+
+  .lightbox { position: fixed; inset: 0; background: rgba(10,8,5,0.88); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  @media (prefers-reduced-motion: no-preference) { .spin { display: inline-block; animation: pulse 1.2s ease-in-out infinite; } }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Trade Desk</h1>
+    <div class="top-actions">
+      <button class="link-btn" type="button" id="refreshBtn">Refresh</button>
+      <button class="link-btn" type="button" id="settingsBtn">Settings</button>
+    </div>
+  </header>
+
+  <!-- Settings -->
+  <section class="panel" id="settingsPanel" hidden aria-labelledby="setTitle">
+    <h2 id="setTitle">Settings</h2>
+    <p class="hint">These are saved only in this browser on this device. Enter them once on each device you use.</p>
+    <label class="field"><span class="label">Anthropic API key</span><input id="setKey" type="password" autocomplete="off" placeholder="sk-ant-..."></label>
+    <label class="field"><span class="label">GitHub token</span><input id="setToken" type="password" autocomplete="off" placeholder="github_pat_..."></label>
+    <label class="field"><span class="label">Data repo (owner/name)</span><input id="setRepo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="yourname/tradedesk-data"></label>
+    <label class="field"><span class="label">Model</span><input id="setModel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="claude-sonnet-5"></label>
+    <div class="foot">
+      <span class="status" id="setStatus"></span>
+      <button class="btn ghost small" type="button" id="setTest">Test connections</button>
+      <button class="btn small" type="button" id="setSave">Save</button>
+    </div>
+  </section>
+
+  <!-- Your account -->
+  <section class="panel" aria-labelledby="acctTitle">
+    <div class="panel-head">
+      <h2 id="acctTitle">Your account</h2>
+      <button class="link-btn" id="acctEditBtn" type="button">Edit</button>
+    </div>
+    <div id="acctView" class="acct"><div class="body"><span class="muted small">Loading…</span></div></div>
+    <form id="acctForm" hidden>
+      <div class="field">
+        <span class="label">Screenshot</span>
+        <input type="file" id="acctFile" accept="image/*">
+        <span class="hint">Leave empty to keep the current one.</span>
+      </div>
+      <div class="row">
+        <label class="field"><span class="label">Verified value ($)</span><input id="acctValue" type="number" min="0" step="1" inputmode="numeric"></label>
+        <label class="field"><span class="label">Evaluator</span><input id="acctEvaluator" type="text" placeholder="kichi"></label>
+        <label class="field"><span class="label">What you paid ($, optional)</span><input id="acctPaid" type="number" min="0" step="1" inputmode="numeric"></label>
+      </div>
+      <label class="field"><span class="label">Summary</span><textarea id="acctSummary" placeholder="SS/S counts, recharge, server, transfers, email…"></textarea></label>
+      <div class="foot">
+        <span class="status" id="acctStatus"></span>
+        <button class="btn ghost small" type="button" id="acctCancel">Cancel</button>
+        <button class="btn small" type="submit" id="acctSave">Save</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- New appraisal -->
+  <section class="panel" aria-labelledby="newTitle">
+    <h2 id="newTitle">New appraisal</h2>
+    <div class="seg" id="modeSeg" role="group" aria-label="What are you checking?">
+      <button type="button" data-mode="trade" aria-pressed="true">Trade offer</button>
+      <button type="button" data-mode="sell" aria-pressed="false">Sell offer</button>
+      <button type="button" data-mode="buy" aria-pressed="false">Buying</button>
+    </div>
+    <p class="hint" id="modeHint"></p>
+
+    <div id="mediaBlock" class="field">
+      <label class="drop" id="drop" for="mediaInput">
+        <strong>Add screenshots or a video</strong><br>
+        <span class="hint">Tap to pick, or drop files here. Videos are split into frames you can trim.</span>
+      </label>
+      <input type="file" id="mediaInput" accept="image/*,video/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+      <span class="hint" id="mediaCount"></span>
+    </div>
+
+    <div class="row">
+      <label class="field"><span class="label" id="priceLabel">Price ($)</span><input id="price" type="number" min="0" step="1" inputmode="numeric"></label>
+    </div>
+    <label class="field"><span class="label">What they said (optional)</span><textarea id="details" placeholder="Server, recharge, transfers, email, terms like MM or installments…"></textarea></label>
+
+    <div class="row">
+      <button class="btn" type="button" id="goBtn">Appraise</button>
+      <button class="btn ghost" type="button" id="stopBtn" hidden>Stop</button>
+      <span class="status" id="goStatus" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section class="list" aria-labelledby="histTitle">
+    <div class="panel-head">
+      <h2 id="histTitle">Past appraisals</h2>
+      <div class="tabs" id="filterTabs">
+        <button class="pill" type="button" data-f="all" aria-pressed="true">All</button>
+        <button class="pill" type="button" data-f="trade" aria-pressed="false">Trade</button>
+        <button class="pill" type="button" data-f="sell" aria-pressed="false">Sell</button>
+        <button class="pill" type="button" data-f="buy" aria-pressed="false">Buying</button>
+      </div>
+    </div>
+    <div class="list" id="histList"><div class="empty">Loading…</div></div>
+  </section>
+</div>
+
+<div class="lightbox" id="lightbox" hidden><img alt=""></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ================= constants =================
+  var MODES = {
+    trade: { label: 'Trade offer', badge: 'trade', priceLabel: 'Cash they add on top ($, optional)', needsMedia: true,
+      hint: 'Someone offers their account for yours. Add their account screenshots or video; it gets appraised and compared with your account.' },
+    sell: { label: 'Sell offer', badge: 'sell', priceLabel: 'Amount offered ($)', needsMedia: false,
+      hint: 'Someone offers cash for your account. Enter the amount; it is checked against your verified value and selling rules.' },
+    buy: { label: 'Buying', badge: 'buy', priceLabel: 'Asking price ($, optional)', needsMedia: true,
+      hint: 'An account you might buy. Add its screenshots or video and the asking price.' }
+  };
+  var VERDICT_TONE = { accept: 'good', buy: 'good', decline: 'crit', reject: 'crit', pass: 'crit', counter: 'warn' };
+  var STATUS_OPTS = { trade: ['open', 'accepted', 'declined'], sell: ['open', 'accepted', 'declined'], buy: ['open', 'bought', 'passed'] };
+  var DEFAULT_MODEL = 'claude-sonnet-5';
+  var MAX_IMAGES = 20;          // images sent to Claude per appraisal
+  var FRAMES_PER_VIDEO = 8;
+  var TILE_EDGE = 2000;         // big screenshots are cut into tiles about this size
+
+  // Paths inside the private data repo
+  var P = { rules: 'config/rules.md', chart: 'config/chart.csv', account: 'current-account.json', evals: 'evaluations.json' };
+
+  var state = { mode: 'trade', items: [], filter: 'all', evals: [], account: null, rules: null, chart: null };
+  var ctl = null;
+  var imgCache = {};
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function money(n) { return (n == null || n === '' || isNaN(Number(n))) ? null : '$' + Math.round(Number(n)).toLocaleString('en-US'); }
+  function numOrNull(v) { if (v === '' || v == null) return null; var n = Number(v); return isFinite(n) ? n : null; }
+  function list(v) { return Array.isArray(v) ? v.filter(Boolean) : []; }
+  function newId() { return new Date().toISOString().slice(0, 10) + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function timeAgo(iso) {
+    var d = new Date(iso); if (isNaN(d.getTime())) return '';
+    var s = Math.max(0, (Date.now() - d.getTime()) / 1000);
+    if (s < 60) return 'just now';
+    var m = s / 60; if (m < 60) return Math.floor(m) + 'm ago';
+    var h = m / 60; if (h < 24) return Math.floor(h) + 'h ago';
+    var days = h / 24; if (days < 21) return Math.floor(days) + 'd ago';
+    return d.toLocaleDateString();
+  }
+  function fmtTime(t) { var s = Math.round(t); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+
+  // ================= settings (this device only) =================
+  function store(k, v) { try { if (v == null || v === '') localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  var settings = {
+    get key() { return load('td.anthropicKey'); },
+    get token() { return load('td.githubToken'); },
+    get repo() { return load('td.repo').trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, ''); },
+    get model() { return load('td.model').trim() || DEFAULT_MODEL; },
+    complete: function () { return !!(this.key && this.token && /^[^/\s]+\/[^/\s]+$/.test(this.repo)); }
+  };
+  function openSettings() {
+    $('setKey').value = settings.key; $('setToken').value = settings.token;
+    $('setRepo').value = settings.repo; $('setModel').value = load('td.model');
+    $('settingsPanel').hidden = false;
+  }
+  $('settingsBtn').addEventListener('click', function () { $('settingsPanel').hidden ? openSettings() : ($('settingsPanel').hidden = true); });
+  $('setSave').addEventListener('click', function () {
+    store('td.anthropicKey', $('setKey').value.trim());
+    store('td.githubToken', $('setToken').value.trim());
+    store('td.repo', $('setRepo').value.trim());
+    store('td.model', $('setModel').value.trim());
+    $('setStatus').className = 'status ok'; $('setStatus').textContent = 'Saved.';
+    reloadAll();
+  });
+  $('setTest').addEventListener('click', async function () {
+    var st = $('setStatus'); st.className = 'status'; st.textContent = 'Testing…';
+    var key = $('setKey').value.trim(), token = $('setToken').value.trim(), repo = $('setRepo').value.trim();
+    var msgs = [];
+    try {
+      var r = await fetch('https://api.github.com/repos/' + repo, { headers: ghHeaders(token) });
+      if (r.ok) { var j = await r.json(); msgs.push(j.private ? 'GitHub: OK (private repo).' : 'GitHub: OK, but this repo is PUBLIC. Make it private.'); }
+      else msgs.push('GitHub: ' + (r.status === 404 ? 'repo not found, or the token can’t see it.' : r.status === 401 ? 'token rejected.' : 'error ' + r.status + '.'));
+    } catch (e) { msgs.push('GitHub: couldn’t connect.'); }
+    try {
+      var a = await fetch('https://api.anthropic.com/v1/models', { headers: anthropicHeaders(key) });
+      msgs.push(a.ok ? 'Anthropic: OK.' : 'Anthropic: ' + (a.status === 401 ? 'key rejected.' : 'error ' + a.status + '.'));
+    } catch (e) { msgs.push('Anthropic: couldn’t connect.'); }
+    st.className = msgs.every(function (m) { return /OK\.|OK \(/.test(m) && !/PUBLIC/.test(m); }) ? 'status ok' : 'status err';
+    st.textContent = msgs.join(' ');
+  });
+
+  // ================= GitHub storage =================
+  function ghHeaders(token) {
+    return { 'Authorization': 'Bearer ' + (token || settings.token), 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  }
+  function contentsUrl(path) { return 'https://api.github.com/repos/' + settings.repo + '/contents/' + path.split('/').map(encodeURIComponent).join('/'); }
+  function b64FromBytes(bytes) {
+    var bin = '', CH = 0x8000;
+    for (var i = 0; i < bytes.length; i += CH) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    return btoa(bin);
+  }
+  function b64FromText(text) { return b64FromBytes(new TextEncoder().encode(text)); }
+  function textFromB64(b64) {
+    var bin = atob(b64.replace(/\s/g, '')), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  async function b64FromBlob(blob) { return b64FromBytes(new Uint8Array(await blob.arrayBuffer())); }
+  function ghError(r, what) { var e = new Error(what + ' failed (' + r.status + ')'); e.status = r.status; return e; }
+
+  // Read a text file: returns {text, sha} or null when it doesn't exist.
+  async function ghGetText(path) {
+    var r = await fetch(contentsUrl(path) + '?t=' + Date.now(), { headers: ghHeaders(), cache: 'no-store' });
+    if (r.status === 404) return null;
+    if (!r.ok) throw ghError(r, 'Reading ' + path);
+    var j = await r.json();
+    if (j.encoding === 'base64' && j.content) return { text: textFromB64(j.content), sha: j.sha };
+    // Files over 1 MB come back without content; fetch them raw.
+    var raw = await fetch(contentsUrl(path) + '?t=' + Date.now(), { headers: Object.assign(ghHeaders(), { Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' });
+    if (!raw.ok) throw ghError(raw, 'Reading ' + path);
+    return { text: await raw.text(), sha: j.sha };
+  }
+  async function ghGetBlobUrl(path) {
+    if (imgCache[path]) return imgCache[path];
+    var r = await fetch(contentsUrl(path), { headers: Object.assign(ghHeaders(), { Accept: 'application/vnd.github.raw+json' }) });
+    if (!r.ok) throw ghError(r, 'Reading ' + path);
+    imgCache[path] = URL.createObjectURL(await r.blob());
+    return imgCache[path];
+  }
+  async function ghPut(path, base64, message, sha) {
+    var body = { message: message, content: base64 };
+    if (sha) body.sha = sha;
+    var r = await fetch(contentsUrl(path), { method: 'PUT', headers: Object.assign(ghHeaders(), { 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
+    if (!r.ok) throw ghError(r, 'Saving ' + path);
+    return (await r.json()).content.sha;
+  }
+  // Change evaluations.json safely: re-read the latest copy, apply the change, save. Retries once if another device saved in between.
+  async function updateEvals(change, message) {
+    for (var attempt = 0; attempt < 2; attempt++) {
+      var cur = await ghGetText(P.evals);
+      var arr = cur ? JSON.parse(cur.text || '[]') : [];
+      arr = change(arr) || arr;
+      try {
+        await ghPut(P.evals, b64FromText(JSON.stringify(arr, null, 1)), message, cur && cur.sha);
+        state.evals = sortEvals(arr); renderHistory();
+        return;
+      } catch (e) { if (!(e.status === 409 || e.status === 422) || attempt === 1) throw e; }
+    }
+  }
+  function sortEvals(arr) { return arr.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); }); }
+
+  // ================= Anthropic API =================
+  function anthropicHeaders(key) {
+    return {
+      'x-api-key': key || settings.key,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      // Required for calling the API straight from a browser page. The key stays on this device.
+      'anthropic-dangerous-direct-browser-access': 'true'
+    };
+  }
+  async function askClaude(system, content, signal) {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: signal, headers: anthropicHeaders(),
+      body: JSON.stringify({ model: settings.model, max_tokens: 3000, system: system, messages: [{ role: 'user', content: content }] })
+    });
+    var j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) {
+      var e2 = new Error((j && j.error && j.error.message) || ('HTTP ' + r.status));
+      e2.status = r.status; e2.type = j && j.error && j.error.type; throw e2;
+    }
+    var text = (j.content || []).filter(function (c) { return c.type === 'text'; }).map(function (c) { return c.text; }).join('\n');
+    return { text: text, stop: j.stop_reason, usage: j.usage };
+  }
+  function parseJson(text) {
+    try { return JSON.parse(text); } catch (e) {}
+    var fence = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (fence) { try { return JSON.parse(fence[1]); } catch (e) {} }
+    var a = text.indexOf('{'), b = text.lastIndexOf('}');
+    if (a !== -1 && b > a) { try { return JSON.parse(text.slice(a, b + 1)); } catch (e) {} }
+    return null;
+  }
+
+  // ================= lightbox =================
+  var lb = $('lightbox');
+  lb.addEventListener('click', function () { lb.hidden = true; });
+  function openLightbox(src) { lb.querySelector('img').src = src; lb.hidden = false; }
+
+  // ================= image helpers =================
+  function loadImage(blob) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(blob), img = new Image();
+      img.onload = function () { res(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('decode')); };
+      img.src = url;
+    });
+  }
+  function canvasBlob(src, sx, sy, sw, sh, maxEdge, quality) {
+    var scale = Math.min(1, maxEdge / Math.max(sw, sh));
+    var c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
+    c.getContext('2d').drawImage(src, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    return new Promise(function (res, rej) { c.toBlob(function (b) { b ? res(b) : rej(new Error('encode')); }, 'image/jpeg', quality || 0.88); });
+  }
+  function once(el, ev, ms) {
+    return new Promise(function (res, rej) {
+      var t = setTimeout(function () { done(); rej(new Error('timeout')); }, ms || 8000);
+      function ok() { done(); res(); } function bad() { done(); rej(new Error('media')); }
+      function done() { clearTimeout(t); el.removeEventListener(ev, ok); el.removeEventListener('error', bad); }
+      el.addEventListener(ev, ok); el.addEventListener('error', bad);
+    });
+  }
+  async function extractFrames(file, n) {
+    var v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'auto';
+    v.src = URL.createObjectURL(file);
+    await once(v, 'loadedmetadata', 15000);
+    try { await v.play(); v.pause(); } catch (e) {}
+    var dur = v.duration;
+    if (!isFinite(dur) || dur <= 0) throw new Error('duration');
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var t = dur * (0.04 + 0.92 * (n === 1 ? 0.5 : i / (n - 1)));
+      v.currentTime = t;
+      await once(v, 'seeked', 8000);
+      out.push({ blob: await canvasBlob(v, 0, 0, v.videoWidth, v.videoHeight, 1600, 0.88), t: t });
+    }
+    URL.revokeObjectURL(v.src);
+    return out;
+  }
+
+  // Turn the picked items into JPEGs for Claude plus a text list saying what each one is.
+  // Big screenshots (collages) go as a full view plus zoomed tiles, so small skin icons stay readable.
+  async function prepareImages(items) {
+    var imgs = items.filter(function (it) { return it.kind === 'image'; });
+    var frames = items.filter(function (it) { return it.kind === 'frame'; });
+    var loaded = [];
+    for (var i = 0; i < imgs.length; i++) loaded.push(await loadImage(imgs[i].file));
+    var grids = loaded.map(function (im) {
+      var w = im.naturalWidth, h = im.naturalHeight;
+      if (Math.max(w, h) <= TILE_EDGE * 1.1) return null;
+      return { cols: Math.ceil(w / TILE_EDGE), rows: Math.ceil(h / TILE_EDGE) };
+    });
+    // Keep the total under MAX_IMAGES by making grids coarser if needed.
+    function total() { return items.length + grids.reduce(function (s, g) { return s + (g ? g.cols * g.rows : 0); }, 0); }
+    var guard = 0;
+    while (total() > MAX_IMAGES && guard++ < 50) {
+      var bi = -1, best = 0;
+      grids.forEach(function (g, k) { if (g && g.cols * g.rows > best) { best = g.cols * g.rows; bi = k; } });
+      if (bi === -1) break;
+      var g = grids[bi];
+      if (g.cols >= g.rows && g.cols > 1) g.cols--; else if (g.rows > 1) g.rows--;
+      if (g.cols * g.rows <= 1) grids[bi] = null;
+    }
+
+    var parts = [], manifest = [];
+    for (var j = 0; j < imgs.length; j++) {
+      var im = loaded[j], w = im.naturalWidth, h = im.naturalHeight, gr = grids[j];
+      var start = parts.length + 1;
+      parts.push(await canvasBlob(im, 0, 0, w, h, TILE_EDGE, 0.88));
+      if (gr) {
+        var tw = w / gr.cols, th = h / gr.rows, ox = tw * 0.06, oy = th * 0.06;
+        for (var r = 0; r < gr.rows; r++) for (var c = 0; c < gr.cols; c++) {
+          var sx = Math.max(0, c * tw - ox), sy = Math.max(0, r * th - oy);
+          parts.push(await canvasBlob(im, sx, sy, Math.min(w - sx, tw + 2 * ox), Math.min(h - sy, th + 2 * oy), TILE_EDGE, 0.88));
+        }
+        manifest.push('Image ' + start + ': full view of screenshot "' + imgs[j].name + '" (' + w + 'x' + h + ' px, downscaled). Images ' + (start + 1) + '-' + (start + gr.cols * gr.rows) +
+          ': zoomed tiles of that same screenshot in reading order, ' + gr.cols + ' columns x ' + gr.rows + ' rows, slightly overlapping (a skin on a tile edge can appear twice; count it once).');
+      } else {
+        manifest.push('Image ' + start + ': screenshot "' + imgs[j].name + '".');
+      }
+      URL.revokeObjectURL(im.src);
+    }
+    frames.forEach(function (f) {
+      parts.push(f.blob);
+      manifest.push('Image ' + parts.length + ': frame at ' + fmtTime(f.t) + ' of video "' + f.name + '" (frames of one video may repeat the same skins; count each skin once).');
+    });
+    return { blobs: parts, manifest: manifest.join('\n') };
+  }
+
+  // Small previews saved with the appraisal so the history shows what was checked.
+  async function savePreviews(id, items) {
+    var paths = [];
+    var pick = items.filter(function (it) { return it.kind === 'image'; }).concat(items.filter(function (it) { return it.kind === 'frame'; }).slice(0, 4));
+    for (var i = 0; i < pick.length; i++) {
+      try {
+        var im = await loadImage(pick[i].kind === 'image' ? pick[i].file : pick[i].blob);
+        var b = await canvasBlob(im, 0, 0, im.naturalWidth, im.naturalHeight, 1600, 0.82);
+        URL.revokeObjectURL(im.src);
+        var path = 'images/' + id + '-' + (i + 1) + '.jpg';
+        await ghPut(path, await b64FromBlob(b), 'Add preview ' + path);
+        paths.push(path);
+      } catch (e) { console.warn('[TradeDesk] preview upload failed', e); }
+    }
+    return paths;
+  }
+
+  // ================= your account =================
+  async function renderAccount() {
+    var a = state.account, view = $('acctView');
+    if (!a) {
+      view.innerHTML = '<div class="body"><span class="muted small">No account set. Tap Edit to add your current account and its verified value, so trade and sell offers can be compared with it.</span></div>';
+      return;
+    }
+    view.innerHTML =
+      (a.image ? '<img alt="Your account">' : '') +
+      '<div class="body">' +
+        '<span class="label">Verified value' + (a.evaluator ? ' · ' + esc(a.evaluator) : '') + '</span>' +
+        '<span class="value num">' + (money(a.verifiedValue) || '—') + '</span>' +
+        (a.paid != null ? '<span class="small muted">You paid <span class="num">' + money(a.paid) + '</span></span>' : '') +
+        (a.summary ? '<span class="summary">' + esc(a.summary) + '</span>' : '') +
+      '</div>';
+    var img = view.querySelector('img');
+    if (img) {
+      img.addEventListener('click', function () { if (img.src) openLightbox(img.src); });
+      try { img.src = await ghGetBlobUrl(a.image); } catch (e) { img.remove(); }
+    }
+  }
+  $('acctEditBtn').addEventListener('click', function () {
+    var a = state.account || {};
+    $('acctValue').value = a.verifiedValue != null ? a.verifiedValue : '';
+    $('acctEvaluator').value = a.evaluator || '';
+    $('acctPaid').value = a.paid != null ? a.paid : '';
+    $('acctSummary').value = a.summary || '';
+    $('acctFile').value = ''; $('acctStatus').textContent = '';
+    $('acctForm').hidden = false; $('acctView').hidden = true; $('acctEditBtn').hidden = true;
+  });
+  $('acctCancel').addEventListener('click', closeAcctForm);
+  function closeAcctForm() { $('acctForm').hidden = true; $('acctView').hidden = false; $('acctEditBtn').hidden = false; }
+  $('acctForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var st = $('acctStatus'); st.className = 'status'; st.textContent = 'Saving…';
+    $('acctSave').disabled = true;
+    try {
+      var data = {
+        verifiedValue: numOrNull($('acctValue').value),
+        evaluator: $('acctEvaluator').value.trim(),
+        paid: numOrNull($('acctPaid').value),
+        summary: $('acctSummary').value.trim(),
+        image: (state.account || {}).image || null,
+        updatedAt: new Date().toISOString()
+      };
+      var f = $('acctFile').files[0];
+      if (f) {
+        var im = await loadImage(f);
+        var b = await canvasBlob(im, 0, 0, im.naturalWidth, im.naturalHeight, 2200, 0.88);
+        URL.revokeObjectURL(im.src);
+        var path = 'images/account-' + Date.now().toString(36) + '.jpg';
+        await ghPut(path, await b64FromBlob(b), 'Update account screenshot');
+        data.image = path;
+      }
+      var cur = await ghGetText(P.account);
+      await ghPut(P.account, b64FromText(JSON.stringify(data, null, 2)), 'Update current account', cur && cur.sha);
+      state.account = data; renderAccount(); closeAcctForm(); updateGo();
+    } catch (err) {
+      console.warn('[TradeDesk] account save failed', err);
+      st.className = 'status err'; st.textContent = "Couldn't save. Check Settings and try again.";
+    } finally { $('acctSave').disabled = false; }
+  });
+
+  // ================= new appraisal form =================
+  function setMode(m) {
+    state.mode = m;
+    $('modeSeg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === m)); });
+    $('modeHint').textContent = MODES[m].hint;
+    $('priceLabel').textContent = MODES[m].priceLabel;
+    $('mediaBlock').hidden = !MODES[m].needsMedia;
+    updateGo();
+  }
+  $('modeSeg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
+
+  function renderThumbs() {
+    var el = $('thumbs'); el.innerHTML = '';
+    state.items.forEach(function (it, i) {
+      var d = document.createElement('div'); d.className = 'thumb';
+      d.innerHTML = '<img alt="">' + (it.kind === 'frame' ? '<span class="tag-t num">' + fmtTime(it.t) + '</span>' : '') +
+        '<button type="button" class="x" aria-label="Remove">×</button>';
+      d.querySelector('img').src = it.url;
+      d.querySelector('img').addEventListener('click', function () { openLightbox(it.url); });
+      d.querySelector('.x').addEventListener('click', function () { URL.revokeObjectURL(it.url); state.items.splice(i, 1); renderThumbs(); });
+      el.appendChild(d);
+    });
+    var n = state.items.length;
+    $('mediaCount').textContent = !n ? '' : n + (n === 1 ? ' item' : ' items') + ' (max ' + MAX_IMAGES + ')' +
+      (state.items.some(function (x) { return x.kind === 'frame'; }) ? '. Remove frames that don’t show skins.' : '');
+    updateGo();
+  }
+  async function addFiles(files) {
+    var st = $('goStatus'); st.className = 'status';
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (f.type.indexOf('video/') === 0) {
+        st.textContent = 'Reading frames from ' + f.name + '…';
+        try {
+          (await extractFrames(f, FRAMES_PER_VIDEO)).forEach(function (fr) {
+            state.items.push({ kind: 'frame', blob: fr.blob, t: fr.t, name: f.name, url: URL.createObjectURL(fr.blob) });
+          });
+          st.textContent = '';
+        } catch (e) {
+          st.className = 'status err';
+          st.textContent = "Couldn't read frames from " + f.name + ' in this browser. Try screenshots of the video instead.';
+        }
+      } else if (f.type.indexOf('image/') === 0 || /\.(png|jpe?g|webp|gif|heic)$/i.test(f.name)) {
+        state.items.push({ kind: 'image', file: f, name: f.name, url: URL.createObjectURL(f) });
+      }
+      renderThumbs();
+    }
+  }
+  $('mediaInput').addEventListener('change', function () { addFiles(Array.from(this.files)); this.value = ''; });
+  var drop = $('drop');
+  ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (e) { if (e.dataTransfer && e.dataTransfer.files) addFiles(Array.from(e.dataTransfer.files)); });
+
+  var BLOCK_RE = /Open Settings|rules are missing|Too many|Add your account/;
+  function updateGo() {
+    var m = MODES[state.mode], btn = $('goBtn'), why = '';
+    if (!settings.complete()) why = 'Open Settings and add your API key, GitHub token and data repo.';
+    else if (!state.rules || !state.chart) why = 'The valuation rules are missing from your data repo (config/rules.md and config/chart.csv).';
+    else if (m.needsMedia && state.items.length > MAX_IMAGES) why = 'Too many images. Remove some (max ' + MAX_IMAGES + ').';
+    else if (state.mode === 'sell' && !state.account) why = 'Add your account first, so the offer has something to compare with.';
+    btn.disabled = !!why || (m.needsMedia && !state.items.length) || (state.mode === 'sell' && numOrNull($('price').value) == null) || !!ctl;
+    if (ctl) return;
+    var st = $('goStatus');
+    if (why) { st.className = 'status err'; st.textContent = why; }
+    else if (BLOCK_RE.test(st.textContent)) { st.textContent = ''; st.className = 'status'; }
+  }
+  $('price').addEventListener('input', updateGo);
+
+  // ================= the prompt =================
+  function systemPrompt() {
+    return [
+      'You appraise Identity V game accounts for Mari, who trades them. Follow her rules below exactly. Never invent skins, prices, recharge totals or tier counts you cannot see or read.',
+      '=== MARI\'S RULES ===', state.rules,
+      '=== SMURF VALUES CHART (CSV: section, skin, NAEU value USD, code value USD, notes) ===', state.chart
+    ].join('\n\n');
+  }
+  function accountText() {
+    var a = state.account;
+    if (!a) return 'Mari has not set a current account.';
+    return 'Mari\'s current account (the reference for comparisons): verified value ' + (money(a.verifiedValue) || 'not set') +
+      (a.evaluator ? ' (real evaluator: ' + a.evaluator + ')' : '') + '.' +
+      (a.paid != null ? ' She paid ' + money(a.paid) + ' for it.' : ' What she paid is not recorded.') +
+      (a.summary ? ' Summary: ' + a.summary : '');
+  }
+  function taskPrompt(mode, price, details, manifest) {
+    var task;
+    if (mode === 'trade') {
+      task = 'TASK: someone offers their own account (shown in the images) in trade for Mari\'s current account' +
+        (price != null ? ', plus ' + money(price) + ' cash on top' : '') + '. ' +
+        '1) Appraise their account using the rules and chart. 2) Compare it with Mari\'s verified value: upgrade, downgrade, or roughly even? ' +
+        '3) Apply her trade rule: she only accepts if the offered account (plus any cash) is highball relative to hers and she could resell it for clearly more. ' +
+        'verdict must be "accept", "decline" or "counter" (counter = ask for cash on top; put the cash amount to ask for in counterAt).';
+    } else if (mode === 'sell') {
+      task = 'TASK: a buyer offers ' + money(price) + ' cash for Mari\'s current account. There are no images. ' +
+        'Judge the offer against her verified value, what she paid (if recorded) and her selling rules (large profit target, installments/MM terms). ' +
+        'verdict must be "accept", "reject" or "counter" (put the price to counter at in counterAt). rangeLow/rangeHigh = the price range her account can realistically sell for, based on the verified value and her selling history, or null if you can\'t say. ' +
+        'notables must be an empty array. comparison.note should state the offer vs her verified value and the profit over what she paid if known.';
+    } else {
+      task = 'TASK: Mari might buy this account (shown in the images)' + (price != null ? ', listed at ' + money(price) : ', no asking price given') + '. ' +
+        'Appraise it using the rules and chart, then apply her buying rules (rush sells only; the price must sit clearly below value to leave resale margin). ' +
+        'verdict must be "buy", "pass" or "counter" (put the price she should offer in counterAt). comparison should be null unless comparing with her own account is useful.';
+    }
+    return [
+      '=== HER ACCOUNT ===', accountText(),
+      '=== THIS APPRAISAL ===', task,
+      'What the other person said / extra details from Mari: ' + (details || '(nothing)'),
+      manifest ? 'Images attached:\n' + manifest : 'No images attached.',
+      '=== OUTPUT ===',
+      'Reply with only one JSON object, no other text, in this shape:',
+      '{"verdict": string, "headline": "one plain sentence with the bottom line", "rangeLow": number|null, "rangeHigh": number|null, ' +
+      '"confidence": "low"|"medium"|"high", "counterAt": number|null, ' +
+      '"notables": [{"name": "skin name as on the chart", "value": "chart value as written, e.g. $380 or $100-120"}], ' +
+      '"recharge": string|null, "why": ["2-4 short reasons"], "risks": ["0-4 short risks"], ' +
+      '"comparison": {"type": "upgrade"|"downgrade"|"even", "note": string} | null, "whatWouldChangeMind": string}',
+      'rangeLow/rangeHigh are USD for the account being appraised (see the task for sell offers). List up to 10 of the most valuable skins you can actually identify in notables, with their chart value; skip skins you can\'t read. Keep every string short and plain.'
+    ].join('\n\n');
+  }
+
+  // ================= run =================
+  function apiErrorText(e) {
+    if (e.name === 'AbortError') return null;
+    if (e.status === 401) return 'Anthropic rejected the API key. Check it in Settings.';
+    if (e.status === 403) return 'Anthropic refused this key (permissions or billing). Check your Anthropic console.';
+    if (e.status === 400 && /credit|billing/i.test(e.message)) return 'Your Anthropic account is out of credit. Add credit in the Anthropic console.';
+    if (e.status === 400) return 'Anthropic couldn’t process this request: ' + e.message;
+    if (e.status === 413) return 'Too much to send at once. Remove some images.';
+    if (e.status === 429) return 'Rate limit reached. Wait a minute and try again.';
+    if (e.status === 529 || e.status >= 500) return 'Anthropic is busy right now. Try again in a moment.';
+    if (e.status === 404 && e.message) return 'Model not found. Check the model name in Settings.';
+    return 'Something went wrong: ' + (e.message || 'unknown error');
+  }
+  $('stopBtn').addEventListener('click', function () { if (ctl) ctl.abort(); });
+  $('goBtn').addEventListener('click', run);
+
+  async function run() {
+    if (ctl) return;
+    var mode = state.mode, m = MODES[mode];
+    var price = numOrNull($('price').value), details = $('details').value.trim();
+    var st = $('goStatus');
+    ctl = new AbortController(); var myCtl = ctl;
+    $('goBtn').disabled = true; $('stopBtn').hidden = false; st.className = 'status';
+    var t0 = Date.now(), phase = 'Preparing images';
+    function tick() { st.innerHTML = '<span class="spin">' + phase + '</span> <span class="num">' + Math.round((Date.now() - t0) / 1000) + 's</span>'; }
+    tick(); var timer = setInterval(tick, 500);
+    var saved = false;
+    try {
+      var items = m.needsMedia ? state.items.slice() : [];
+      var prep = items.length ? await prepareImages(items) : { blobs: [], manifest: '' };
+      var content = [];
+      for (var i = 0; i < prep.blobs.length; i++) {
+        content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: await b64FromBlob(prep.blobs[i]) } });
+      }
+      content.push({ type: 'text', text: taskPrompt(mode, price, details, prep.manifest) });
+      phase = 'Claude is reading the account';
+      var ans = await askClaude(systemPrompt(), content, myCtl.signal);
+      var result = parseJson(ans.text);
+      if (!result || typeof result !== 'object') throw Object.assign(new Error('The answer came back in the wrong format. Tap Appraise again.'), { status: 0 });
+      phase = 'Saving';
+      var id = newId();
+      var imagePaths = await savePreviews(id, items);
+      var doc = {
+        id: id, createdAt: new Date().toISOString(), mode: mode, price: price, details: details, images: imagePaths,
+        result: result, status: 'open', userNote: '', realEval: null, realEvaluator: '',
+        accountValueAtTime: state.account ? numOrNull(state.account.verifiedValue) : null,
+        model: settings.model, usage: ans.usage || null
+      };
+      await updateEvals(function (arr) { arr.push(doc); return arr; }, 'Add appraisal ' + id);
+      saved = true;
+      state.items.forEach(function (it) { URL.revokeObjectURL(it.url); });
+      state.items = []; renderThumbs();
+      $('price').value = ''; $('details').value = '';
+      clearInterval(timer); st.className = 'status ok'; st.textContent = 'Done. Saved below.';
+    } catch (e) {
+      clearInterval(timer);
+      console.warn('[TradeDesk] appraisal failed', e);
+      var msg = /^(Saving|Reading) /.test(e.message || '') ? 'Couldn’t save to GitHub (' + e.message + '). Check the token and repo in Settings.' : apiErrorText(e);
+      if (msg === null) { st.className = 'status'; st.textContent = 'Stopped.'; }
+      else { st.className = 'status err'; st.textContent = msg; }
+    } finally {
+      ctl = null; $('stopBtn').hidden = true; updateGo();
+    }
+  }
+
+  // ================= history =================
+  var noteTimers = {};
+  function evalCard(ev) {
+    var r = ev.result || {}, m = MODES[ev.mode] || MODES.trade;
+    var el = document.createElement('article');
+    el.className = 'card' + (ev.status && ev.status !== 'open' ? ' done' : '');
+    var opts = (STATUS_OPTS[ev.mode] || STATUS_OPTS.trade).map(function (v) {
+      return '<option value="' + v + '"' + ((ev.status || 'open') === v ? ' selected' : '') + '>' + v.charAt(0).toUpperCase() + v.slice(1) + '</option>';
+    }).join('');
+    var verdict = String(r.verdict || '').toLowerCase();
+    var range = r.rangeLow != null || r.rangeHigh != null
+      ? (r.rangeLow != null && r.rangeHigh != null && r.rangeLow !== r.rangeHigh ? money(r.rangeLow) + '–' + money(r.rangeHigh) : money(r.rangeLow != null ? r.rangeLow : r.rangeHigh))
+      : '';
+    var givenBits = [];
+    if (ev.price != null) givenBits.push((ev.mode === 'sell' ? 'Offered ' : ev.mode === 'buy' ? 'Asking ' : 'Cash on top ') + '<span class="num">' + money(ev.price) + '</span>');
+    if (ev.details) givenBits.push(esc(ev.details));
+    var skins = list(r.notables).map(function (n) { return '<span class="tag skin">' + esc(n.name) + (n.value ? '<span class="num">' + esc(n.value) + '</span>' : '') + '</span>'; }).join('');
+    var why = list(r.why).map(function (w) { return '<span class="tag">' + esc(w) + '</span>'; }).join('');
+    var risks = list(r.risks).map(function (w) { return '<span class="tag risk">' + esc(w) + '</span>'; }).join('');
+    var cmp = r.comparison && r.comparison.note ? '<div class="cmp ' + esc(r.comparison.type || '') + '">' + esc(r.comparison.note) + '</div>' : '';
+    var shots = list(ev.images).map(function (p) { return '<img alt="Appraised account" data-path="' + esc(p) + '">'; }).join('');
+
+    el.innerHTML =
+      '<div class="card-head"><div class="badges"><span class="badge ' + m.badge + '">' + esc(m.label) + '</span><span class="age">' + esc(timeAgo(ev.createdAt)) + '</span></div>' +
+      '<select class="status-select" aria-label="Status">' + opts + '</select></div>' +
+      (shots ? '<div class="shots">' + shots + '</div>' : '') +
+      (givenBits.length ? '<div class="given">' + givenBits.join('\n') + '</div>' : '') +
+      '<div class="verdict">' +
+        '<div class="v-top"><span class="v-action ' + (VERDICT_TONE[verdict] || '') + '">' + esc(verdict || 'estimate') +
+          (verdict === 'counter' && r.counterAt != null ? ' at <span class="num">' + money(r.counterAt) + '</span>' : '') + '</span>' +
+          (range ? '<span class="v-range num">' + range + '</span>' : '') + '</div>' +
+        (r.confidence ? '<div class="v-conf">' + esc(r.confidence) + ' confidence · my estimate' + (r.recharge ? ' · recharge ' + esc(r.recharge) : '') + '</div>' : '') +
+        (r.headline ? '<div class="v-head">' + esc(r.headline) + '</div>' : '') +
+        cmp +
+        (skins ? '<div class="label">Notables found</div><div class="tag-list">' + skins + '</div>' : '') +
+        (why || risks ? '<div class="tag-list">' + why + risks + '</div>' : '') +
+        (r.whatWouldChangeMind ? '<div class="wcm">Would change my mind: ' + esc(r.whatWouldChangeMind) + '</div>' : '') +
+      '</div>' +
+      '<div class="field"><span class="label">Real eval, if you got one</span><div class="inline">' +
+        '<input type="number" min="0" step="1" inputmode="numeric" class="real-val" aria-label="Real eval in dollars" placeholder="$" value="' + (ev.realEval != null ? esc(ev.realEval) : '') + '">' +
+        '<input type="text" class="real-by" aria-label="Evaluator" placeholder="Evaluator" value="' + esc(ev.realEvaluator || '') + '">' +
+      '</div></div>' +
+      '<div class="field"><span class="label">Your note</span><textarea class="note-field" placeholder="Price talk, what happened…">' + esc(ev.userNote || '') + '</textarea><div class="save-hint"></div></div>' +
+      '<div class="foot"><button type="button" class="link-btn del">Remove</button></div>';
+
+    var hint = el.querySelector('.save-hint');
+    function patch(fields, delay) {
+      hint.textContent = 'Saving…';
+      clearTimeout(noteTimers[ev.id]);
+      noteTimers[ev.id] = setTimeout(function () {
+        updateEvals(function (arr) { arr.forEach(function (x) { if (x.id === ev.id) Object.assign(x, fields()); }); return arr; }, 'Update appraisal ' + ev.id)
+          .then(function () { hint.textContent = 'Saved'; setTimeout(function () { hint.textContent = ''; }, 1200); })
+          .catch(function () { hint.textContent = "Couldn't save"; });
+      }, delay);
+    }
+    el.querySelector('.status-select').addEventListener('change', function (e) { var v = e.target.value; patch(function () { return { status: v }; }, 0); });
+    var note = el.querySelector('.note-field'), rv = el.querySelector('.real-val'), rb = el.querySelector('.real-by');
+    // Save when she leaves the field, so every keystroke isn't a GitHub commit.
+    note.addEventListener('change', function () { patch(function () { return { userNote: note.value }; }, 0); });
+    function saveReal() { patch(function () { return { realEval: numOrNull(rv.value), realEvaluator: rb.value.trim() }; }, 0); }
+    rv.addEventListener('change', saveReal); rb.addEventListener('change', saveReal);
+    el.querySelectorAll('.shots img').forEach(function (img) {
+      img.addEventListener('click', function () { if (img.src) openLightbox(img.src); });
+      ghGetBlobUrl(img.dataset.path).then(function (u) { img.src = u; }).catch(function () { img.remove(); });
+    });
+    var del = el.querySelector('.del');
+    del.addEventListener('click', function () {
+      if (del.dataset.armed) {
+        updateEvals(function (arr) { return arr.filter(function (x) { return x.id !== ev.id; }); }, 'Remove appraisal ' + ev.id).catch(function () { hint.textContent = "Couldn't remove"; });
+        return;
+      }
+      del.dataset.armed = '1'; del.textContent = 'Tap again to remove';
+      setTimeout(function () { delete del.dataset.armed; del.textContent = 'Remove'; }, 3000);
+    });
+    return el;
+  }
+  function renderHistory() {
+    var box = $('histList');
+    var active = document.activeElement;
+    if (active && box.contains(active) && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT')) return;
+    box.innerHTML = '';
+    var rows = state.evals.filter(function (e) { return state.filter === 'all' || e.mode === state.filter; });
+    if (!rows.length) {
+      var em = document.createElement('div'); em.className = 'empty';
+      em.textContent = state.evals.length ? 'Nothing in this filter yet.' : 'No appraisals yet. Pick a type above, add the account, and tap Appraise.';
+      box.appendChild(em); return;
+    }
+    rows.forEach(function (e) { box.appendChild(evalCard(e)); });
+  }
+  $('filterTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('.pill'); if (!b) return;
+    state.filter = b.dataset.f;
+    this.querySelectorAll('.pill').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    renderHistory();
+  });
+
+  // ================= load everything from the data repo =================
+  async function reloadAll() {
+    updateGo();
+    if (!settings.complete()) {
+      $('acctView').innerHTML = '<div class="body"><span class="muted small">Open Settings to connect your data repo.</span></div>';
+      $('histList').innerHTML = '<div class="empty">Open Settings and add your API key, GitHub token and data repo.</div>';
+      openSettings(); return;
+    }
+    $('histList').innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      var got = await Promise.all([ghGetText(P.rules), ghGetText(P.chart), ghGetText(P.account), ghGetText(P.evals)]);
+      state.rules = got[0] ? got[0].text : null;
+      state.chart = got[1] ? got[1].text : null;
+      state.account = got[2] ? JSON.parse(got[2].text) : null;
+      state.evals = sortEvals(got[3] ? JSON.parse(got[3].text || '[]') : []);
+      renderAccount(); renderHistory(); updateGo();
+    } catch (e) {
+      console.warn('[TradeDesk] load failed', e);
+      var msg = e.status === 401 ? 'GitHub rejected the token. Check it in Settings.'
+        : e.status === 404 || e.status === 403 ? 'Can’t reach the data repo. Check the repo name and the token’s access in Settings.'
+        : 'Couldn’t load your data (' + (e.message || 'error') + ').';
+      $('histList').innerHTML = '<div class="empty">' + esc(msg) + '</div>';
+      $('acctView').innerHTML = '<div class="body"><span class="muted small">' + esc(msg) + '</span></div>';
+    }
+  }
+  $('refreshBtn').addEventListener('click', reloadAll);
+
+  setMode('trade');
+  reloadAll();
+})();
+</script>
+</body>
+</html>
