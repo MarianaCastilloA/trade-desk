@@ -396,7 +396,7 @@
   async function askClaude(system, content, signal) {
     var r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: signal, headers: anthropicHeaders(),
-      body: JSON.stringify({ model: settings.model, max_tokens: 3000, system: system, messages: [{ role: 'user', content: content }] })
+      body: JSON.stringify({ model: settings.model, max_tokens: 8000, system: system, messages: [{ role: 'user', content: content }] })
     });
     var j = null; try { j = await r.json(); } catch (e) {}
     if (!r.ok) {
